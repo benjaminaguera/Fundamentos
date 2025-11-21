@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Practica 2</title>
+<meta charset="UTF-8" />
+	<style>
+		canvas {
+		margin: 0px;
+		padding: 0px;
+		border:1px solid #000000;
+		background-color: lightgray;
+		}
+	</style>
+	</head>
+	<body>
+	<div>
+		<canvas id="lienzo1" width="500" height="500"></canvas>
+	</div>
+	<div>
+		<canvas style="background-color: white;" id="lienzo2" width="800" height="100"></canvas>
+	</div>
+	<script>
+      
+
+	//la función escribe los cuadros usando dos bucles for, uno para las filas y otro para las columnas
+	function repiteCuadros(tabla)
+	{
+		for (var y = 0; y < alto; y++)
+		{
+			for (var x = 0; x < ancho; x++)
+			{
+				if (tabla.celulas[x][y].estadoActual == true) {
+					contextoGrafico.fillRect(0 + 5 * x, 0 + 5 * y, 5, 5);
+				} else {
+                    contextoGrafico.rect(0 + 5 * x, 0 + 5 * y, 5, 5);	
+				}
+			}
+		}
+		contextoGrafico.stroke();	
+	}
+
+        class Tabla {
+            constructor(x, y) {
+                this.celulas = [];
+
+                // Crear matriz vacía
+                for (let i = 0; i < x; i++) {
+                    this.celulas[i] = [];
+                    for (let j = 0; j < y; j++) {
+                        this.celulas[i][j] = new cell();
+
+                        if (Math.random() <= 0.5) {
+                            this.celulas[i][j].estadoActual = true;
+                        }
+                    }
+                }
+            }
+
+            checkSurroundings(x, y) {		//Cambiar para los bordes
+                const c = this.celulas;
+                let vivas = 0;
+                if (c[x - 1]?.[y - 1]?.estadoActual) vivas++;
+                if (c[x]?.[y - 1]?.estadoActual) vivas++;
+                if (c[x + 1]?.[y - 1]?.estadoActual) vivas++;
+                if (c[x + 1]?.[y]?.estadoActual) vivas++;
+                if (c[x + 1]?.[y + 1]?.estadoActual) vivas++;
+                if (c[x]?.[y + 1]?.estadoActual) vivas++;
+                if (c[x - 1]?.[y + 1]?.estadoActual) vivas++;
+                if (c[x - 1]?.[y]?.estadoActual) vivas++;
+
+                return vivas;
+            }
+
+            comprobarEstadoTabla() {
+                for (let i = 0; i < this.celulas.length; i++) {
+                    for (let j = 0; j < this.celulas[i].length; j++) {
+                        this.celulas[i][j].checkEstado(this.checkSurroundings(i, j));
+                    }
+                }
+            }
+
+            swap() {
+                for (let i = 0; i < this.celulas.length; i++) {
+                    for (let j = 0; j < this.celulas[i].length; j++) {
+                        this.celulas[i][j].cambiarEstado();
+                    }
+                }
+            }
+        }
+
+
+		
+	  
+		class cell {
+			constructor() {
+				let estadoActual = false;		//Para ambos, false = muerta; true = viva
+				let estadoSiguiente = false;
+				let tiempoVivo = 0;
+			}
+			checkEstado(celulasVivas) {
+				if (estadoActual = false && celulasVivas == 3) {		//Celulas Muerta
+					estadoSiguiente = true;
+				}
+				if (estadoActual = true && !(celulasVivas == 2 || celulasVivas == 3)) {	//Celula Viva
+					estadoSiguiente = false;
+				}
+			}
+			cambiarEstado() {
+				estadoActual = estadoSiguiente;
+				if (estadoActual == true) {
+					tiempoVivo++;
+				} else {
+					tiempoVivo = 0;
+				}
+			}
+		}
+
+
+        var contextoGrafico = document.getElementById('lienzo1').getContext('2d');
+        var contextoTexto = document.getElementById('lienzo2').getContext('2d');
+
+        var ancho = 100;
+        var alto = 100;
+
+        contextoTexto.font = "18px Courier New";
+        contextoTexto.fillText("Información gráfica:", 10, 30);
+        contextoTexto.font = "28px Times New";
+        contextoTexto.strokeText("X = 0 Y = 0", 10, 60);
+
+        var tabla = new Tabla(ancho, alto);
+
+        repiteCuadros(tabla);
+
+	</script>
+	</body>
+</html>  
