@@ -14,7 +14,7 @@
 	</head>
 	<body>
 	<div>
-		<canvas id="lienzo1" width="500" height="500"></canvas>
+		<canvas id="lienzo1" width="1000" height="1000"></canvas>
 	</div>
 	<div>
 		<canvas style="background-color: white;" id="lienzo2" width="800" height="100"></canvas>
@@ -30,9 +30,9 @@
 			for (var x = 0; x < ancho; x++)
 			{
 				if (tabla.celulas[x][y].estadoActual == true) {
-					contextoGrafico.fillRect(0 + 5 * x, 0 + 5 * y, 5, 5);
+					contextoGrafico.rect(0 + 10 * x, 0 + 10 * y, 10, 10);
 				} else {
-                    contextoGrafico.rect(0 + 5 * x, 0 + 5 * y, 5, 5);	
+                    contextoGrafico.fillRect(0 + 10 * x, 0 + 10 * y, 10, 10);	
 				}
 			}
 		}
@@ -48,10 +48,6 @@
                     this.celulas[i] = [];
                     for (let j = 0; j < y; j++) {
                         this.celulas[i][j] = new cell();
-
-                        if (Math.random() <= 0.5) {
-                            this.celulas[i][j].estadoActual = true;
-                        }
                     }
                 }
             }
