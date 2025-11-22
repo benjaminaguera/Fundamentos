@@ -24,7 +24,7 @@
 	<script>
 
     class Tabla {
-        constructor(x, y) {
+        constructor(x, y) { //constructor de la tabla con tamaño x*y
             this.celulas = [];
 
             // Crear matriz vacía
@@ -36,11 +36,11 @@
             }
         }
 
-        checkSurroundings(x, y) {
+        checkSurroundings(x, y) { //Comprueba las celulas vivas alrededor de la celda (x,y)
             const c = this.celulas;
             let vivas = 0;
             let derecha = x + 1;
-            if (derecha >= c.length) { derecha = 0; }
+            if (derecha >= c.length) { derecha = 0; } //Si se sale por la derecha, vuelve a la izquierda
             let izquierda = x - 1;
             if (izquierda < 0) { izquierda = c.length - 1; }
             let arriba = y - 1;
@@ -69,7 +69,7 @@
             }
         }
 
-        swapTabla() {
+        swapTabla() { //Actualiza el estado de las celdas al del siguiente paso
             for (let i = 0; i < this.celulas.length; i++) {
                 for (let j = 0; j < this.celulas[i].length; j++) {
                     this.celulas[i][j].cambiarEstado();
@@ -77,11 +77,11 @@
             }
         }
 
-        swapTile(x, y) {
+        swapTile(x, y) { //Cambia el estado de la celda al contrario
             this.celulas[parseInt(x)][parseInt(y)].estadoActual = !this.celulas[parseInt(x)][parseInt(y)].estadoActual;
         }
 
-        pintar(contextoGrafico) {
+        pintar(contextoGrafico) { //Pinta la tabla en el canvas
             for (var y = 0; y < this.celulas[0].length; y++) {
                 for (var x = 0; x < this.celulas.length; x++) {
                     if (this.celulas[x][y].estadoActual == true) {
@@ -96,7 +96,7 @@
         }
     }
 
-    class cell {
+    class cell { //Creamos la clase celda con su estado actual, el siguiente y el tiempo viva
         constructor() {
             this.estadoActual = false;        // Para ambos, false = muerta; true = viva
             this.estadoSiguiente = this.estadoActual;
@@ -113,7 +113,7 @@
             }
         }
 
-        cambiarEstado() {
+        cambiarEstado() { //Actualiza el estado actual al siguiente y el tiempo viva
             this.estadoActual = this.estadoSiguiente;
             if (this.estadoActual == true) {
                 this.tiempoVivo++;
@@ -152,7 +152,7 @@
         cuadro.addEventListener("click", manejaratongenerico, false);
     }
 
-        function manejaratongenerico(e) {
+        function manejaratongenerico(e) { //Control de eventos ratón
             let x = parseInt(e.offsetX / cellSize);
             let y = parseInt(e.offsetY / cellSize);
             switch (e.type) {
@@ -167,7 +167,7 @@
             }
         }
 
-    function PausarReanudar() {
+    function PausarReanudar() { //Control del botón pausar/reanudar
         simulate = !simulate;
         if (simulate) {
             document.getElementById("boton1").innerHTML = "Pausar";
@@ -178,7 +178,7 @@
         }
     }
 
-        function actualizarSimulacion() {
+        function actualizarSimulacion() { //Actualiza la simulación en cada paso
             if (!simulate) return;
 
             tabla.comprobarEstadoTabla();
@@ -200,4 +200,4 @@
 
 	</script>
 </body>
-</html>
+</html> 
