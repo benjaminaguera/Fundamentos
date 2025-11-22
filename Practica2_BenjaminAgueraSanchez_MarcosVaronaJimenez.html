@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Practica 2</title>
+	<meta charset="UTF-8" />
+    <author>Benjamín Agüera Sánchez, Marcos Varona Jimenez</author>
+	<style>
+		canvas {
+			margin: 0px;
+			padding: 0px;
+			border: 1px solid #000000;
+			background-color: lightgray;
+		}
+        button {
+            width: 100px;
+            height: 40px;
+            margin-inline: 20px;
+        }
+	</style>
+</head>
+<body>
+    <div>
+        <canvas id="lienzo1" width="1000" height="1000"></canvas>
+    </div>
+    <div id="info">Paso: 0</div>
+    <div>
+        <p id="parrafoCell"></p>
+    </div>
+    <div style="display:inline-flex; flex-direction:row">
+        <button type="button" id="boton1" onclick="PausarReanudar()">Reanudar</button>
+        <button type="button" id="boton2" onclick="cambiarTamaño()">Cambiar Tamaño</button>
+    </div>
+    <script>
+
+        class Tabla {
+            constructor(x, y) {             //constructor de la tabla con tamaño x,y
+                this.celulas = [];
+
+                // Crear matriz/tabla de celulas
+                for (let i = 0; i < x; i++) {
+                    this.celulas[i] = [];
+                    for (let j = 0; j < y; j++) {
+                        this.celulas[i][j] = new cell();
+                    }
+                }
+            }
+
+            checkSurroundings(x, y) {       //Comprueba las celulas vivas alrededor de la celula en la posicion x, y
+                const c = this.celulas;
+                let vivas = 0;
+
+                //Aqui hacemos que los bordes se conecten
+                let derecha = x + 1;
+                if (derecha >= c.length) { derecha = 0; }           //Si se sale por la derecha, vuelve a la izquierda
+                let izquierda = x - 1;
+                if (izquierda < 0) { izquierda = c.length - 1; }    //Si se sale por la izquierda, vuelve a la derecha
+                let arriba = y - 1;
+                if (arriba < 0) { arriba = c[x].length - 1; }       //Si se sale por arriba, vuelve a abajo
+                let abajo = y + 1;
+                if (abajo >= c[x].length) { abajo = 0; }            //Si se sale por abajo, vuelve a arriba
+
+                //Comprueba para las 8 células vecinas cuantas hay vivas
+                if (c[izquierda][arriba].estadoActual == true) { vivas++; }
+                if (c[x][arriba].estadoActual == true) { vivas++; }
+                if (c[derecha][arriba].estadoActual == true) { vivas++; }
+                if (c[derecha][y].estadoActual == true) { vivas++; }
+                if (c[derecha][abajo].estadoActual == true) { vivas++; }
+                if (c[x][abajo].estadoActual == true) { vivas++; }
+                if (c[izquierda][abajo].estadoActual == true) { vivas++; }
+                if (c[izquierda][y].estadoActual == true) { vivas++; }
+
+                return vivas;
+            }
+
+            comprobarEstadoTabla() {        //LLama al método de comprobar el estado de cada célula
+                for (let i = 0; i < this.celulas.length; i++) {
+                    for (let j = 0; j < this.celulas[i].length; j++) {
+                        let celulasVivas = this.checkSurroundings(i, j);
+                        this.celulas[i][j].checkEstado(celulasVivas);   // Calculamos el siguiente estado de la celda
+                    }
+                }
+            }
+
+            swapTabla() {                   //Actualiza el estado de las celdas al del siguiente paso
+                for (let i = 0; i < this.celulas.length; i++) {
+                    for (let j = 0; j < this.celulas[i].length; j++) {
+                        this.celulas[i][j].cambiarEstado();
+                    }
+                }
+            }
+
+            swapTile(x, y) {                //Cambia el estado de la celda al contrario (usado para el clic)
+                this.celulas[parseInt(x)][parseInt(y)].estadoActual = !this.celulas[parseInt(x)][parseInt(y)].estadoActual;
+            }
+
+            pintar(contextoGrafico) {           //Pinta la tabla en el canvas según el estado de las celulas
+                for (var y = 0; y < this.celulas[0].length; y++) {
+                    for (var x = 0; x < this.celulas.length; x++) {
+                        if (this.celulas[x][y].estadoActual == true) {
+                            contextoGrafico.fillStyle = "white";        //Blanco para las celulas vivas
+                        } else {
+                            contextoGrafico.fillStyle = "black";        //Negro para las celulas muertas
+                        }
+                        contextoGrafico.fillRect(0 + cellSize * x, 0 + cellSize * y, cellSize, cellSize);   //Pinta un cuadro con el tamaño de las celulas
+                    }
+                }
+            }
+
+            isAllDead() {               //Función para comprobar si todas las células están muertas
+                for (let i = 0; i < this.celulas.length; i++) {
+                    for (let j = 0; j < this.celulas[i].length; j++) {
+                        if (this.celulas[i][j].estadoActual == true) { return false; } //Si hay alguna célula viva devolvemos un false, porque sí hay al menos una celula viva
+                    }
+                }
+                return true;    //Si nunca encontramos una célula viva devolvemos true
+            }
+        }
+
+        class cell {                                //Creamos la clase celula con su estado actual, el siguiente y el tiempo que lleva viva
+            constructor() {
+                this.estadoActual = false;          // Para ambos, false = muerta; true = viva
+                this.estadoSiguiente = this.estadoActual;
+                this.tiempoVivo = 0;
+            }
+
+            checkEstado(celulasVivas) {
+                this.estadoSiguiente = this.estadoActual;
+                if (this.estadoActual === false && celulasVivas === 3) {        // Células Muertas
+                    this.estadoSiguiente = true;
+                }
+                if (this.estadoActual === true && (celulasVivas < 2 || celulasVivas > 3)) {    // Células Vivas
+                    this.estadoSiguiente = false;
+                }
+            }
+
+            cambiarEstado() {                               //Actualiza el estado al siguiente
+                this.estadoActual = this.estadoSiguiente;
+                if (this.estadoActual == true) {
+                    this.tiempoVivo++;              //Además, si está viva se incrementa el tiempo de vida
+                } else {
+                    this.tiempoVivo = 0;            //Pero si está muerta se reinicia a 0
+                }
+            }
+        }
+
+        function cambiarTamaño() {          //Función para cambiar el tamaño de la tabla
+            ancho = parseInt(prompt("¿Cuántas células de ancho y alto quieres? Cambiar el tamaño reiniciará la simulación"));
+            if (isNaN(ancho)) { return 0; }     //Si se cancela el proceso, no se hace nada
+            while (ancho <= 0) {        //Si se da un valor inválido, se pide otro
+                ancho = parseInt(prompt("Valor no válido (menor o igual que 0), prueba otra vez ¿cuántas células por lado?"));
+            }
+
+            alto = ancho;
+
+            // Calculamos automáticamente el tamaño de cada celda
+            cellSize = Math.floor(tamañoCanvas / ancho);
+
+            //Cambiamos el tamaño de la tabla (el canvas)
+            contextoGrafico.canvas.width = cellSize * ancho;
+            contextoGrafico.canvas.height = cellSize * alto;
+
+            //Se crea la tabla y se pinta
+            tabla = new Tabla(ancho, alto);
+            tabla.pintar(contextoGrafico);
+
+            //Se reinician los pasos y se pone en pausa de nuevo
+            simulate = false;
+            pasos = 0;
+            info.innerHTML = "Paso: " + pasos;
+            document.getElementById("boton1").innerHTML = "Reanudar";
+        }
+
+        //Variables para tener los elementos HTML
+        var contextoGrafico = document.getElementById('lienzo1').getContext('2d');
+        var parrafoCell = document.getElementById('parrafoCell');
+        var info = document.getElementById('info');
+
+        //El tamaño del canvas siempre será el mismo
+        const tamañoCanvas = 850;
+
+        //Por defecto hay 40 celulas
+        let ancho = 40;
+        let alto = ancho;   //El ancho y alto es el mismo en este caso
+
+        // Calculamos automáticamente el tamaño de cada celda
+        let cellSize = Math.floor(tamañoCanvas / ancho);
+
+        //Empieza la simulación en pausa, en el paso 0 y velocidad de simulación en 1 paso cada 100 milisegundos
+        var simulate = false;
+        var pasos = 0;
+        var vel = 100;
+
+        //Ajusta el tamaño del canvas
+        contextoGrafico.canvas.width = cellSize * ancho;
+        contextoGrafico.canvas.height = cellSize * alto;
+
+        //Se crea una nueva tabal y la función que se repetirá duarante el proceso
+        var tabla = new Tabla(ancho, alto);
+        var temporizador = setInterval(actualizarSimulacion, vel);
+
+        function inicializaElem(cuadro) {   //Añade los eventos clic y mover el ratón a un elemento
+            cuadro.addEventListener("mousemove", manejaratongenerico, false);
+            cuadro.addEventListener("click", manejaratongenerico, false);
+        }
+
+        function manejaratongenerico(e) {           //Control de eventos ratón
+            //Se calcula la posición del canvas para conocer sobre qué celula está el ratón
+            let x = parseInt(e.offsetX / cellSize);
+            let y = parseInt(e.offsetY / cellSize);
+            switch (e.type) {
+                case "click":   //Clic para invertir el estado de la célula
+                    tabla.swapTile(x, y);
+                    //console.log("X:" + x + " Y: " + y + ", " + tabla.checkSurroundings(x, y));
+                    tabla.pintar(contextoGrafico);
+                    break;
+                case "mousemove":   //Mover el ratón muestra la información de la célula
+                    let texto = "Celula en " + x + ", " + y + " lleva " + tabla.celulas[x][y].tiempoVivo + " pasos viva.";
+                    parrafoCell.innerHTML = texto;
+            }
+        }
+
+        function PausarReanudar() { //Control del botón pausar/reanudar
+            simulate = !simulate;
+            if (tabla.isAllDead()) { simulate = false; }        //Si hay células muertas, se impide reanudar la simulación
+
+            //Dependiendo del estado de la simulación, el botón tendrá un texto distinto
+            if (simulate) {
+                document.getElementById("boton1").innerHTML = "Pausar";
+                temporizador = setInterval(actualizarSimulacion, vel);
+            } else {
+                document.getElementById("boton1").innerHTML = "Reanudar";
+                clearInterval(temporizador);
+            }
+        }
+
+        function actualizarSimulacion() {   //Actualiza la simulación en cada paso
+            if (tabla.isAllDead()) { simulate = false; document.getElementById("boton1").innerHTML = "Reanudar"; }  //Si no hay celulas vivas, se detiene la simulación
+            if (!simulate) return;
+
+            tabla.comprobarEstadoTabla();   //Comprueba el estado siguiente
+            tabla.swapTabla();              //Cambia el estado actual por el siguiente
+            tabla.pintar(contextoGrafico);  //Pinta el resultado
+
+            //Se incrementa el contador de pasos
+            pasos++;
+            info.innerHTML = "Paso: " + pasos;
+        }
+
+
+        //Esto es para pintar la tabla en el estado inicial
+        tabla.pintar(contextoGrafico);
+
+        //Y esto para añadir los eventos del ratón al canvas
+        inicializaElem(document.getElementById('lienzo1'));
+    </script>
+</body>
+</html> 
